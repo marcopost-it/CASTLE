@@ -198,10 +198,12 @@ class CASTLETabularExplainer(object):
         
         """ N  E  W """
         self.cluster_model = cluster_model
+        #self.cluster_assignments = cluster_model['clustering'].labels_
         self.cluster_assignments = np.array(cluster_model.predict(training_data))
         
         if isinstance(self.cluster_model, sklearn.pipeline.Pipeline):
             #self.pivots, self.pivot_names, self.pivot_classes = self.generate_pivots(cluster_model['scaling'].transform(training_data), self.cluster_assignments, cluster_model['clustering'].majority_classes)
+            
             self.pivots = pivots
             self.pivot_names = ['Cluster_' + str(i) for i in pivots]
         else:
