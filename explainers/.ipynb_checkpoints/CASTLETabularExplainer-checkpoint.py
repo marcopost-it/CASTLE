@@ -198,13 +198,12 @@ class CASTLETabularExplainer(object):
         
         """ N  E  W """
         self.cluster_model = cluster_model
-        #self.cluster_assignments = cluster_model['clustering'].labels_
         self.cluster_assignments = np.array(cluster_model.predict(training_data))
         
         if isinstance(self.cluster_model, sklearn.pipeline.Pipeline):
             #self.pivots, self.pivot_names, self.pivot_classes = self.generate_pivots(cluster_model['scaling'].transform(training_data), self.cluster_assignments, cluster_model['clustering'].majority_classes)
-            
-            self.pivots = pivots
+            #self.pivots = pivots
+            self.pivots = cluster_model['scaling'].inverse_transform(pivots)
             self.pivot_names = ['Cluster_' + str(i) for i in pivots]
         else:
             self.pivots, self.pivot_names, self.pivot_classes = self.generate_pivots(training_data, self.cluster_assignments, cluster_model.majority_classes)
@@ -377,7 +376,8 @@ class CASTLETabularExplainer(object):
         if isinstance(self.cluster_model, sklearn.pipeline.Pipeline):
             data = self.cluster_model['scaling'].transform(data)
             
-        centers = self.pivots
+        #centers = self.pivots
+        centers = (self.pivots - self.scaler.mean_) / self.scaler.scale_
         
         if verbose:
             print("[LIMETabularExplainer] - explain_instance. Vicini creati e scalati. L'istanza originale scalata: ", data[0])        
