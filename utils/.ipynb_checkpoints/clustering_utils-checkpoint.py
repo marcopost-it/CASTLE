@@ -54,7 +54,7 @@ def compute_quality(clusterer,data,labels,w1,w2,w3):
     second_term = w2/(len(cluster_set))*purities
 
     
-    n_classes = np.max(np.unique(labels))+1
+    n_classes = (np.max(np.unique(labels))+1).astype(int)
     
     n_couples = 0
     IoUs = 0
