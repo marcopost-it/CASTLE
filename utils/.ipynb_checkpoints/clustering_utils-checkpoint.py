@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import progressbar
-from cluster_utils import compute_purity, compute_cluster_description
 
 def compute_quality(clusterer,data,labels,w1,w2,w3):
     
