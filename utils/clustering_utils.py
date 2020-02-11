@@ -74,6 +74,25 @@ def compute_quality(clusterer,data,labels,w1,w2,w3):
                            
     return first_term + second_term + third_term
 
+def compute_purity(cluster, cluster_assignments, targets):
+    # Returns:
+    # - cluster_label: majority class
+    # - purity: ratio between number of instances in majority class and the total number of instances
+    
+    classes = np.unique(targets, return_index=False, return_inverse=False, return_counts=False, axis=None)
+    mask = [True if assignment == cluster else False for assignment in cluster_assignments]
+    labels, counts = np.unique(targets[mask], return_counts=True, axis=None)
+    
+    return labels[np.argmax(counts)], (np.max(counts) / np.sum(counts))
+
+def compute_cluster_description(cluster, cluster_assignments, data, dimensionality):
+    mask = [True if assignment == cluster else False for assignment in cluster_assignments]
+    data = data[mask]
+    rule = np.empty((dimensionality,2))
+    for i in range(dimensionality):
+            rule[i] = [np.min(data[:,i]), np.max(data[:,i])]
+    return rule
+
 def teta_k_computation(Cz,Cw):
     teta_k =  np.minimum(Cz[1],Cw[1]) - np.maximum(Cw[0],Cz[0])
     
