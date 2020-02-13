@@ -362,11 +362,22 @@ class CASTLETabularExplainer(object):
             print("[LIMETabularExplainer] - explain_instance. L'istanza da spiegare: ", data_row)
             print("[LIMETabularExplainer] - explain_instance. Cluster di appartenenza: ", test_instance_cluster)
 
-        
+
+        if sp.sparse.issparse(data_row) and not sp.sparse.isspmatrix_csr(data_row):
+            # Preventative code: if sparse, convert to csr format if not in csr format already
+            data_row = data_row.tocsr()
+            
         data, inverse = self.__data_inverse(data_row, num_samples)
         
-        scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
-        
+        if sp.sparse.issparse(data):
+            # Note in sparse case we don't subtract mean since data would become dense
+            scaled_data = data.multiply(self.scaler.scale_)
+            # Multiplying with csr matrix can return a coo sparse matrix
+            if not sp.sparse.isspmatrix_csr(scaled_data):
+                scaled_data = scaled_data.tocsr()
+        else:
+            scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
+            
         distances = sklearn.metrics.pairwise_distances(
                 scaled_data,
                 scaled_data[0].reshape(1, -1),
@@ -387,7 +398,8 @@ class CASTLETabularExplainer(object):
         if verbose:    
             print("[LIMETabularExplainer] - explain_instance. Probabilità prima istanza (modello black box): ", str(yss[0]))
 
-        test_instance_distances = sp.spatial.distance.cdist(data[0].reshape(1, -1), centers, metric=distance_metric)[0]
+        # MODIFICA (data[0] -> scaled_data[0])
+        test_instance_distances = sp.spatial.distance.cdist(scaled_data[0].reshape(1, -1), centers, metric=distance_metric)[0]
         
         num_clusters = num_clusters if num_clusters <= len(centers) else len(centers)
         argcenters = np.argsort(test_instance_distances)
@@ -402,14 +414,25 @@ class CASTLETabularExplainer(object):
             print("[LIMETabularExplainer] - explain_instance. Cluster names: ", cluster_names)
         
         
-        #OSS : Testato solo con Discretizer = None        
-        data_df = pd.DataFrame(data)
+        #OSS : Testato solo con Discretizer = None 
+        
+        # MODIFICA (data -> scaled_data)
+        data_df = pd.DataFrame(scaled_data)
+        
         centers = pd.DataFrame(centers[argcenters])
         #centers = (pd.DataFrame(centers[argcenters]) - self.scaler.mean_) / self.scaler.scale_
-
+        
+       
         centroid_distances = scipy.spatial.distance.cdist(data_df.iloc[:,:], centers.iloc[:,:], metric=distance_metric)
         centroid_distances = self.proximity_function(centroid_distances)
         
+        if sp.sparse.issparse(data_row):
+            values = self.convert_and_round(data_row.data)
+            feature_indexes = data_row.indices
+        else:
+            values = self.convert_and_round(data_row)
+            feature_indexes = None
+            
         domain_mapper = TableDomainMapper(cluster_names, 
                                           centroid_distances[0],
                                           centroid_distances[0], # N E W
