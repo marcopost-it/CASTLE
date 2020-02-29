@@ -324,7 +324,7 @@ class PDBSCAN(BaseEstimator, ClusterMixin):
             labels, counts = np.unique(y[mask], return_counts=True, axis=None)
             self.majority_classes[i] = labels[np.argmax(counts)]                       
                                          
-        self.cluster_centers_ = compute_cluster_centers(X, self.labels_)
+        self.pivots = compute_cluster_centers(X, self.labels_)
         return self
     
     def predict(self, X):

@@ -203,10 +203,9 @@ class CASTLETabularExplainer(object):
         if isinstance(self.cluster_model, sklearn.pipeline.Pipeline):
             #self.pivots, self.pivot_names, self.pivot_classes = self.generate_pivots(cluster_model['scaling'].transform(training_data), self.cluster_assignments, cluster_model['clustering'].majority_classes)
             #self.pivots = pivots
-            self.pivots = cluster_model['scaling'].inverse_transform(pivots)
-            self.pivot_names = ['Cluster_' + str(i) for i in pivots]
-        else:
-            self.pivots, self.pivot_names, self.pivot_classes = self.generate_pivots(training_data, self.cluster_assignments, cluster_model.majority_classes)
+            self.pivots = cluster_model['scaling'].inverse_transform(cluster_model['clustering'].pivots)
+        
+        self.pivot_names = ['Pivot_' + str(i) for i in range(len(cluster_model['clustering'].pivots))]
         
         """ N  E  W """        
         self.categorical_names = categorical_names or {}
@@ -363,31 +362,27 @@ class CASTLETabularExplainer(object):
             print("[LIMETabularExplainer] - explain_instance. Cluster di appartenenza: ", test_instance_cluster)
 
 
-        if sp.sparse.issparse(data_row) and not sp.sparse.isspmatrix_csr(data_row):
-            # Preventative code: if sparse, convert to csr format if not in csr format already
-            data_row = data_row.tocsr()
+#        if sp.sparse.issparse(data_row) and not sp.sparse.isspmatrix_csr(data_row):
+#            # Preventative code: if sparse, convert to csr format if not in csr format already
+#            data_row = data_row.tocsr()
             
         data, inverse = self.__data_inverse(data_row, num_samples)
         
-        if sp.sparse.issparse(data):
-            # Note in sparse case we don't subtract mean since data would become dense
-            scaled_data = data.multiply(self.scaler.scale_)
-            # Multiplying with csr matrix can return a coo sparse matrix
-            if not sp.sparse.isspmatrix_csr(scaled_data):
-                scaled_data = scaled_data.tocsr()
-        else:
-            scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
+#        if sp.sparse.issparse(data):
+#            # Note in sparse case we don't subtract mean since data would become dense
+#            scaled_data = data.multiply(self.scaler.scale_)
+#            # Multiplying with csr matrix can return a coo sparse matrix
+#            if not sp.sparse.isspmatrix_csr(scaled_data):
+#                scaled_data = scaled_data.tocsr()
+#        else:
+        scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
             
         distances = sklearn.metrics.pairwise_distances(
                 scaled_data,
                 scaled_data[0].reshape(1, -1),
-                metric=distance_metric
+                metric='euclidean'
         ).ravel()
         
-        if isinstance(self.cluster_model, sklearn.pipeline.Pipeline):
-            data = self.cluster_model['scaling'].transform(data)
-            
-        #centers = self.pivots
         centers = (self.pivots - self.scaler.mean_) / self.scaler.scale_
         
         if verbose:
@@ -398,40 +393,31 @@ class CASTLETabularExplainer(object):
         if verbose:    
             print("[LIMETabularExplainer] - explain_instance. Probabilità prima istanza (modello black box): ", str(yss[0]))
 
-        # MODIFICA (data[0] -> scaled_data[0])
         test_instance_distances = sp.spatial.distance.cdist(scaled_data[0].reshape(1, -1), centers, metric=distance_metric)[0]
         
         num_clusters = num_clusters if num_clusters <= len(centers) else len(centers)
         argcenters = np.argsort(test_instance_distances)
-        #argcenters = argcenters[argcenters != test_instance_cluster][0:num_clusters]
         argcenters = argcenters[0:num_clusters]
         argcenters = np.sort(argcenters)
         
-        #cluster_names = self.pivot_names[argcenters]
-        cluster_names = ['Cluster_' + str(i) for i in argcenters]
+        cluster_names = ['Pivot_' + str(i) for i in argcenters]
             
         if verbose:
             print("[LIMETabularExplainer] - explain_instance. Cluster names: ", cluster_names)
         
-        
-        #OSS : Testato solo con Discretizer = None 
-        
-        # MODIFICA (data -> scaled_data)
+                
         data_df = pd.DataFrame(scaled_data)
-        
-        centers = pd.DataFrame(centers[argcenters])
-        #centers = (pd.DataFrame(centers[argcenters]) - self.scaler.mean_) / self.scaler.scale_
-        
+        centers = pd.DataFrame(centers[argcenters])        
        
         centroid_distances = scipy.spatial.distance.cdist(data_df.iloc[:,:], centers.iloc[:,:], metric=distance_metric)
         centroid_distances = self.proximity_function(centroid_distances)
         
-        if sp.sparse.issparse(data_row):
-            values = self.convert_and_round(data_row.data)
-            feature_indexes = data_row.indices
-        else:
-            values = self.convert_and_round(data_row)
-            feature_indexes = None
+#        if sp.sparse.issparse(data_row):
+#            values = self.convert_and_round(data_row.data)
+#            feature_indexes = data_row.indices
+#        else:
+        values = self.convert_and_round(data_row)
+        feature_indexes = None
             
         domain_mapper = TableDomainMapper(cluster_names, 
                                           centroid_distances[0],
@@ -484,9 +470,9 @@ class CASTLETabularExplainer(object):
                     yss,
                     distances,
                     label,
-                    num_features,
+                    num_clusters,
                     model_regressor=model_regressor,
-                    feature_selection=self.feature_selection)
+                    feature_selection='none')
             
             (lime_exp.intercept[label],
              lime_exp.local_exp[label],
