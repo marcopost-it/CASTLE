@@ -140,7 +140,7 @@ class CASTLETabularExplainer(object):
                  kernel=None,
                  verbose=False,
                  class_names=None,
-                 feature_selection='auto',
+                 feature_selection='none',
                  discretize_continuous=True,
                  discretizer='quartile',
                  sample_around_instance=False,
@@ -472,7 +472,7 @@ class CASTLETabularExplainer(object):
                     label,
                     num_clusters,
                     model_regressor=model_regressor,
-                    feature_selection='none')
+                    feature_selection=self.feature_selection)
             
             (lime_exp.intercept[label],
              lime_exp.local_exp[label],
@@ -482,7 +482,7 @@ class CASTLETabularExplainer(object):
                     distances,
                     label,
                     num_features,
-                    feature_selection='none',#self.feature_selection,
+                    feature_selection=self.feature_selection,
                     model_regressor=model_regressor)
             
         
