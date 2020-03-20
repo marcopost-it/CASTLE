@@ -411,7 +411,6 @@ class CASTLETabularExplainer(object):
        
         centroid_distances = scipy.spatial.distance.cdist(data_df.iloc[:,:], centers.iloc[:,:], metric=distance_metric)
         centroid_distances = self.proximity_function(centroid_distances)
-        
 #        if sp.sparse.issparse(data_row):
 #            values = self.convert_and_round(data_row.data)
 #            feature_indexes = data_row.indices
@@ -437,6 +436,7 @@ class CASTLETabularExplainer(object):
                                           mode=self.mode,
                                           class_names=self.class_names)
         castle_exp.scaled_data = centroid_distances
+        
         castle_exp.distance_values = centroid_distances[0]
         
         lime_exp = explanation.Explanation(domain_mapper_lime,
