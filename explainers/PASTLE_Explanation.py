@@ -25,7 +25,17 @@ import matplotlib.pyplot as plt
 
 class PASTLE_Explanation():
     
-    def __init__(self, dataset, labels, base_explanation, pivots, test_instance, true_pred, feature_names, distance_values,verbose = False):
+    def __init__(self, 
+                 dataset, 
+                 labels, 
+                 base_explanation, # LIME explanation object
+                 pivots, 
+                 feature_importances,
+                 test_instance, 
+                 true_pred,        # black-box prediction
+                 feature_names,        
+                 verbose = False):
+        
         self.base_exp = base_explanation
         self.test_instance = test_instance
         self.dataset = dataset
@@ -33,11 +43,12 @@ class PASTLE_Explanation():
         self.feature_names = feature_names
         self.pivots = pivots
         self.true_pred = true_pred
-        
-        
-        self.distance_values = distance_values
         self.exp_vector,_,_,_ = self.get_exp_vector(test_instance,base_explanation, pivots, verbose)
         
+        self.features_order = np.array([ c[0] for c in feature_importances])
+        self.features_importance = np.array([ c[1] for c in feature_importances])
+        
+            
     def get_exp_vector(self,test_instance, base_exp, pivots, verbose):
         num_pivots = int(len(pivots))
         exp_pivots = []
@@ -47,10 +58,10 @@ class PASTLE_Explanation():
             exp_pivots.append(pivot_idx)
             weights_array[pivot_idx] = pair[1]
         
-        distance_values = self.distance_values
+        distance_values = self.base_exp.distance_values
         components = weights_array * distance_values
         vectors = []
-        #print(pivots)
+        
         for i in exp_pivots:
             u_dir = pivots[i] - test_instance
             u_amp = np.sqrt(sum(u_dir**2))
@@ -82,8 +93,8 @@ class PASTLE_Explanation():
                                          ls='-')
                        )
             
-        idx = np.array([ c[0] for c in self.base_exp.local_exp[self.base_exp.available_labels()[0]]])
-        fi = np.array([ c[1] for c in self.base_exp.local_exp[self.base_exp.available_labels()[0]]])
+        idx = self.features_order
+        fi = self.features_importance
         
         x_coord = fi[np.argsort(idx)].reshape((8,1))
         
@@ -122,7 +133,7 @@ class PASTLE_Explanation():
         ax.get_yaxis().set_ticks([])
         ax.legend([self.feature_names[c] + ' = ' + str(self.test_instance[c]) for c in range(len(self.feature_names))],prop={'size': 14},bbox_to_anchor=(1.4,1), loc='upper right', ncol=1)
             
-    def move_along_directions(model, n_points = 2000):
+    def move_along_directions(self,model, n_points = 2000):
         dataset = self.dataset
         test_instance = self.test_instance
         exp_vector = self.exp_vector
@@ -141,7 +152,7 @@ class PASTLE_Explanation():
         
         preds_supporting = model.predict_proba(pts_supporting)[:,self.base_exp.available_labels()[0]]
     
-        fig, ax = plt.subplots(2,1, figsize =(8,5))
+        fig, ax = plt.subplots(2,1, figsize =(8,6))
         
         ax[0].tick_params(bottom=False, labelsize=12)
         ax[1].tick_params(bottom=False, labelsize=12)
