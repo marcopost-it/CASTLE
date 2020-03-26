@@ -426,7 +426,7 @@ class CASTLETabularExplainer(object):
                                           feature_indexes=None)
         
         domain_mapper_lime = TableDomainMapper(self.feature_names,
-                                          scaled_data[0],
+                                          data[0],
                                           scaled_data[0],
                                           categorical_features=self.categorical_features,
                                           discretized_feature_names=None,
