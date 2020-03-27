@@ -80,8 +80,69 @@ class PASTLE_Explanation():
             print("Explanation vector: ", exp_vector);
             
         return exp_vector, distance_values, weights_array, components
-
+    
     def show_in_notebook(self):
+        def drawArrow(A,B,color):
+            ax.annotate('', xy=(A[0],A[1]),
+                         xycoords='data',
+                         xytext=(B[0],B[1]),
+                         textcoords='data',
+                         arrowprops=dict(arrowstyle= '<|-',
+                                         color=color,
+                                         lw=3.5,
+                                         ls='-')
+                       )
+        idx = self.features_order
+        fi = self.features_importance
+        
+        x_coord = fi[np.argsort(idx)].reshape((8,1))   
+        if self.base_exp.available_labels()[0] == 0:
+            x_coord *= -1
+        
+        fig,ax = plt.subplots(1,1, figsize=(8,4))
+
+        #ax.scatter(x_coord, y_coord, s=100, c='b', alpha=0.5)
+        ax.grid(False, which='both')
+        ax.spines['left'].set_position('zero')
+        ax.spines['right'].set_color('none')
+        ax.spines['bottom'].set_position('zero')
+        ax.spines['top'].set_color('none')
+        ax.spines['bottom'].set_alpha(0.2)
+        ax.spines['bottom'].set_zorder(0)
+        from matplotlib.ticker import FormatStrFormatter
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+        
+        leftlim = np.min(x_coord) - 0.1*np.max(np.abs(x_coord))
+        rightlim = np.max(x_coord) + 0.1*np.max(np.abs(x_coord))
+        ax.set_xlim(leftlim,rightlim)
+        ax.set_ylim(-3,3)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        cmap = plt.get_cmap('gist_rainbow')
+        import matplotlib.cm as cm
+        colors = cm.tab10(np.linspace(0, 1, len(x_coord)))
+        
+        
+        for i in range(x_coord.shape[0]):
+            drawArrow([x_coord[i], 0], [x_coord[i], np.sign(self.exp_vector[i])],color=colors[i])
+            plt.scatter(x_coord[i],0, color=colors[i], s=50, label = "{:.2f}".format(self.test_instance[i]) + ", " + "{:.2f}".format(x_coord[i][0]))
+
+        ax.axvspan(0, np.max(x_coord) + 0.1*np.max(np.abs(x_coord)), facecolor='green', alpha=0.2, label='_nolegend_')    
+        ax.axvspan(np.min(x_coord) - 0.1*np.max(np.abs(x_coord)), 0, facecolor='red', alpha=0.2,label='_nolegend_')
+        
+        ax.text(0.5*rightlim, 3,  'P D', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
+        ax.text(0.5*rightlim, -3, 'P I', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
+        ax.text(0.5*leftlim,  -3, 'N D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
+        ax.text(0.5*leftlim,  3,  'N I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
+        
+        
+        leg = ax.legend([ self.feature_names[c] + "\n" + \
+           "     I  = " + "{:.2f}".format(x_coord[c][0]) + "\n" + \
+           "    V = " + "{:.2f}".format(self.test_instance[c]) \
+           for c in range(len(self.feature_names))],prop={'size': 11},bbox_to_anchor=(1.75,0.5), loc='center right', ncol=2)
+        leg.get_frame().set_linewidth(0.0)
+        
+    def show_in_notebook2(self):
         def drawArrow(A,color):
             ax.annotate('', xy=(0,0),
                          xycoords='data',
