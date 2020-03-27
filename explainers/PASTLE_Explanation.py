@@ -130,16 +130,15 @@ class PASTLE_Explanation():
         ax.axvspan(0, np.max(x_coord) + 0.1*np.max(np.abs(x_coord)), facecolor='green', alpha=0.2, label='_nolegend_')    
         ax.axvspan(np.min(x_coord) - 0.1*np.max(np.abs(x_coord)), 0, facecolor='red', alpha=0.2,label='_nolegend_')
         
-        ax.text(0.5*rightlim, 3,  'P I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
-        ax.text(0.5*rightlim, -3, 'P D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
-        ax.text(0.5*leftlim,  -3, 'N D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
-        ax.text(0.5*leftlim,  3,  'N I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
+        ax.text(0.5*rightlim, 2.8,  self.base_exp.class_names[self.base_exp.available_labels()[0]], horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.7)
+        #ax.text(0.5*rightlim, 3,  'P I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
+        #ax.text(0.5*rightlim, -3, 'P D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
+        #ax.text(0.5*leftlim,  -3, 'N D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
+        #ax.text(0.5*leftlim,  3,  'N I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
         
         
-        leg = ax.legend([ self.feature_names[c] + "\n" + \
-           "     I = " + "{:.2f}".format(x_coord[c][0]) + "\n" + \
-           "    V = " + "{:.2f}".format(self.test_instance[c]) \
-           for c in range(len(self.feature_names))],prop={'size': 11},bbox_to_anchor=(1.75,0.5), loc='center right', ncol=2)
+        leg = ax.legend([ self.feature_names[c] + " = " + "{:.2f}".format(self.test_instance[c]) \
+           for c in range(len(self.feature_names))],prop={'size': 12},bbox_to_anchor=(1.6,0.5), loc='center right', ncol=1)
         leg.get_frame().set_linewidth(0.0)
         
     def show_in_notebook2(self):
