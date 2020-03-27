@@ -16,11 +16,6 @@ import sklearn.preprocessing
 import sklearn.pipeline
 from sklearn.utils import check_random_state
 
-from lime.discretize import QuartileDiscretizer
-from lime.discretize import DecileDiscretizer
-from lime.discretize import EntropyDiscretizer
-from lime.discretize import BaseDiscretizer
-from lime.discretize import StatsDiscretizer
 import lime.explanation as explanation
 import lime.lime_base as lime_base
 

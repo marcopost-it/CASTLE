@@ -193,7 +193,7 @@ class PASTLE_Explanation():
         ax.get_yaxis().set_ticks([])
         ax.legend([self.feature_names[c] + ' = ' + str(self.test_instance[c]) for c in range(len(self.feature_names))],prop={'size': 14},bbox_to_anchor=(1.4,1), loc='upper right', ncol=1)
             
-    def move_along_directions(self,model, n_points = 2000):
+    def move_along_directions(self,model, n_points = 2000,direction='both'):
         dataset = self.dataset
         test_instance = self.test_instance
         exp_vector = self.exp_vector
@@ -208,43 +208,34 @@ class PASTLE_Explanation():
         pts_supporting = test_instance + x*exp_vector
         pts_supporting = np.where(pts_supporting >= datasetMin, pts_supporting, datasetMin)
         pts_supporting = np.where(pts_supporting <= datasetMax, pts_supporting, datasetMax)
-        
-        
         preds_supporting = model.predict_proba(pts_supporting)[:,self.base_exp.available_labels()[0]]
-    
-        fig, ax = plt.subplots(2,1, figsize =(8,6))
-        
-        ax[0].tick_params(bottom=False, labelsize=12)
-        ax[1].tick_params(bottom=False, labelsize=12)
-        
-        ax[0].set_ylim(0,1)
-        ax[1].set_ylim(0,1)
-        
-        ax[0].set_xticks([])
-        ax[1].set_xticks([])
-    
         stop_point = len(pts_supporting)
-    
-        xx = range(stop_point)
-        yy = preds_supporting[:stop_point]
-        ax[0].plot(xx,yy, color = '#238823')
-        ax[0].set_title("Supporting direction")
-        ax[0].set_xlabel('Points along supporting direction')
-        ax[0].set_ylabel('Model prediction')
-    
+        
         pts_opposing = test_instance - x*exp_vector
         pts_opposing = np.where(pts_opposing >= datasetMin, pts_opposing, datasetMin)
         pts_opposing = np.where(pts_opposing <= datasetMax, pts_opposing, datasetMax)
         preds_opposing = model.predict_proba(pts_opposing)[:,self.base_exp.available_labels()[0]]
         most_opposing = pts_opposing[np.argmin(preds_opposing)]
-    
-        stop_point = len(pts_opposing)
-        xx = range(stop_point)
-        yy = preds_opposing[:stop_point]
-        ax[1].plot(xx,yy, color = '#E42531')
-    
-        ax[1].set_title("Opposing direction")
-        ax[1].set_xlabel('Points along opposing direction')
-        ax[1].set_ylabel('Model prediction')  
+        stop_point = len(pts_opposing)        
+        
+        
+        fig, ax = plt.subplots(1,1, figsize =(8,6))
+        
+        ax.tick_params(bottom=False, labelsize=12)
+        ax.set_ylim(0,1)
+        ax.set_xticks([])
+        ax.set_xlabel('Points along directions')
+        ax.set_ylabel('Model prediction')
+        
+        if direction == 'both' or direction == 'supporting':
+            xx = range(stop_point)
+            yy = preds_supporting[:stop_point]
+            ax.plot(xx,yy, color = '#238823')
+        if direction == 'both' or direction == 'opposing':
+            xx = range(stop_point)
+            yy = preds_opposing[:stop_point]
+            ax.plot(xx,yy, color = '#E42531')
+        
+        plt.legend(['Supporting direction','Opposing direction'])
         
         return pts_supporting, preds_supporting, pts_opposing, preds_opposing
