@@ -95,7 +95,7 @@ class PASTLE_Explanation():
         idx = self.features_order
         fi = self.features_importance
         
-        x_coord = fi[np.argsort(idx)].reshape((8,1))   
+        x_coord = fi[np.argsort(idx)].reshape((len(self.feature_names),1))   
         if self.base_exp.available_labels()[0] == 0:
             x_coord *= -1
         
@@ -156,12 +156,12 @@ class PASTLE_Explanation():
         idx = self.features_order
         fi = self.features_importance
         
-        x_coord = fi[np.argsort(idx)].reshape((8,1))
+        x_coord = fi[np.argsort(idx)].reshape((len(self.feature_names),1))
         
         if self.base_exp.available_labels()[0] == 0:
             x_coord *= -1
         
-        y_coord = np.array(self.exp_vector).reshape((8,1))
+        y_coord = np.array(self.exp_vector).reshape((len(self.feature_names),1))
         # y_coord = np.divide(y_coord,(np.abs(np.max(dataset,axis=0)-np.min(dataset,axis=0))).reshape((8,1)))
         
         points = np.concatenate((x_coord,y_coord),axis=1)
@@ -235,7 +235,7 @@ class PASTLE_Explanation():
             xx = range(stop_point)
             yy = preds_opposing[:stop_point]
             ax.plot(xx,yy, color = '#E42531')
-        
+        plt.grid(True)
         plt.legend(['Supporting direction','Opposing direction'])
         
         return pts_supporting, preds_supporting, pts_opposing, preds_opposing
