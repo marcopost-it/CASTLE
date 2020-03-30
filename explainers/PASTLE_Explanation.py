@@ -81,7 +81,7 @@ class PASTLE_Explanation():
             
         return exp_vector, distance_values, weights_array, components
     
-    def show_in_notebook(self):
+    def show_in_notebook(self,save = False,name = None):
         def drawArrow(A,B,color):
             ax.annotate('', xy=(A[0],A[1]),
                          xycoords='data',
@@ -141,6 +141,10 @@ class PASTLE_Explanation():
            for c in range(len(self.feature_names))],prop={'size': 12},bbox_to_anchor=(1.6,0.5), loc='center right', ncol=1)
         leg.get_frame().set_linewidth(0.0)
         
+        if save:
+            plt.savefig(name, bbox_inches='tight')
+            
+            
     def show_in_notebook2(self):
         def drawArrow(A,color):
             ax.annotate('', xy=(0,0),

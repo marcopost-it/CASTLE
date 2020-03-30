@@ -135,7 +135,7 @@ class CASTLETabularExplainer(object):
                  kernel=None,
                  verbose=False,
                  class_names=None,
-                 feature_selection='none',
+                 feature_selection='auto',
                  discretize_continuous=True,
                  discretizer='quartile',
                  sample_around_instance=False,
@@ -392,7 +392,7 @@ class CASTLETabularExplainer(object):
         
         num_clusters = num_clusters if num_clusters <= len(centers) else len(centers)
         argcenters = np.argsort(test_instance_distances)
-        argcenters = argcenters[0:num_clusters]
+        #argcenters = argcenters[0:num_clusters]
         argcenters = np.sort(argcenters)
         
         cluster_names = ['Pivot_' + str(i) for i in argcenters]
