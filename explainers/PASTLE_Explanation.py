@@ -40,7 +40,9 @@ class PASTLE_Explanation():
         self.test_instance = test_instance
         self.dataset = dataset
         self.labels = labels
-        self.feature_names = feature_names
+        self.feature_names = np.array(feature_names)
+        import matplotlib.cm as cm
+        self.colors = cm.hsv(np.linspace(0, 1, len(self.feature_names)))
         self.pivots = pivots
         self.true_pred = true_pred
         self.exp_vector,_,_,_ = self.get_exp_vector(test_instance,base_explanation, pivots, verbose)
@@ -81,7 +83,7 @@ class PASTLE_Explanation():
             
         return exp_vector, distance_values, weights_array, components
     
-    def show_in_notebook(self,save = False,name = None):
+    def show_in_notebook(self,save = False,name = None, num_features=100):
         def drawArrow(A,B,color):
             ax.annotate('', xy=(A[0],A[1]),
                          xycoords='data',
@@ -92,10 +94,11 @@ class PASTLE_Explanation():
                                          lw=3.5,
                                          ls='-')
                        )
-        idx = self.features_order
-        fi = self.features_importance
+        idx = self.features_order[:num_features]
+        fi = self.features_importance[:num_features]
         
-        x_coord = fi[np.argsort(idx)].reshape((len(self.feature_names),1))   
+        print("Index & Importance: ", idx," - ", fi)
+        x_coord = fi.reshape((len(self.feature_names[idx]),1))   
         if self.base_exp.available_labels()[0] == 0:
             x_coord *= -1
         
@@ -112,33 +115,29 @@ class PASTLE_Explanation():
         from matplotlib.ticker import FormatStrFormatter
         ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         
-        leftlim = np.min(x_coord) - 0.1*np.max(np.abs(x_coord))
+        if np.min(x_coord) < 0:
+            leftlim = np.min(x_coord) - 0.1*np.max(np.abs(x_coord))
+        else:
+            leftlim = 0
         rightlim = np.max(x_coord) + 0.1*np.max(np.abs(x_coord))
         ax.set_xlim(leftlim,rightlim)
         ax.set_ylim(-3,3)
         ax.set_xticks([])
         ax.set_yticks([])
-        cmap = plt.get_cmap('gist_rainbow')
-        import matplotlib.cm as cm
-        colors = cm.tab10(np.linspace(0, 1, len(x_coord)))
-        
         
         for i in range(x_coord.shape[0]):
-            drawArrow([x_coord[i], 0], [x_coord[i], np.sign(self.exp_vector[i])],color=colors[i])
-            plt.scatter(x_coord[i],0, color=colors[i], s=50, label = "{:.2f}".format(self.test_instance[i]) + ", " + "{:.2f}".format(x_coord[i][0]))
+            drawArrow([x_coord[i], 0], [x_coord[i], np.sign(self.exp_vector[idx[i]])],color=self.colors[idx[i]])
+            plt.scatter(x_coord[i],0, color=self.colors[idx[i]], s=50)
 
         ax.axvspan(0, np.max(x_coord) + 0.1*np.max(np.abs(x_coord)), facecolor='green', alpha=0.2, label='_nolegend_')    
-        ax.axvspan(np.min(x_coord) - 0.1*np.max(np.abs(x_coord)), 0, facecolor='red', alpha=0.2,label='_nolegend_')
         
-        ax.text(0.5*rightlim, 2.8,  self.base_exp.class_names[self.base_exp.available_labels()[0]], horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.7)
-        #ax.text(0.5*rightlim, 3,  'P I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
-        #ax.text(0.5*rightlim, -3, 'P D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
-        #ax.text(0.5*leftlim,  -3, 'N D', horizontalalignment='center', verticalalignment='bottom', fontsize=14, alpha=0.5)
-        #ax.text(0.5*leftlim,  3,  'N I', horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.5)
+        if np.min(x_coord) < 0:
+            ax.axvspan(np.min(x_coord) - 0.1*np.max(np.abs(x_coord)), 0, facecolor='red', alpha=0.2,label='_nolegend_')
         
+        ax.text(0.5*rightlim, 2.8,  self.base_exp.class_names[self.base_exp.available_labels()[0]], horizontalalignment='center', verticalalignment='top',    fontsize=14, alpha=0.7)       
         
         leg = ax.legend([ self.feature_names[c] + " = " + "{:.2f}".format(self.test_instance[c]) \
-           for c in range(len(self.feature_names))],prop={'size': 12},bbox_to_anchor=(1.6,0.5), loc='center right', ncol=1)
+           for c in idx],prop={'size': 12},bbox_to_anchor=(1.6,0.5), loc='center right', ncol=1)
         leg.get_frame().set_linewidth(0.0)
         
         if save:
